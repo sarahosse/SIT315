@@ -1,0 +1,59 @@
+/*
+	MOTION-ACTIVATED READING LIGHT
+    Written by: Sarah Osse
+    
+  	This sketch is of a theoretical motion-activated reading light.
+    NOT like a security light, where motion => light activation.
+    INSTEAD, a lamp:	you wave your hand in front to turn it on,
+    					you wave your hand again to turn it off.
+    
+  	It does the following:
+  
+  		- When PIR motion sensor pin goes from HIGH to LOW an interrupt is triggered
+  		- The LED changes state (if it was off, it is now on, and vice versa)
+  		- The LED will stay in that state until motion is sensed again (another interrupt)
+  
+  	The LED state is printed to the Serial Monitor.
+
+*/
+
+const int LED = 9;
+const int PIR = 2;
+
+int LED_state = LOW;
+
+void setup()
+{
+	Serial.begin(9600);
+  
+  	pinMode(LED, OUTPUT);
+	pinMode(PIR, INPUT_PULLUP);
+  
+  	// Motion sensor pin (PIR) is set as interrupt and calls the function
+  	attachInterrupt(digitalPinToInterrupt(PIR), interrupt_function, FALLING);
+}
+
+
+void loop()
+{
+  // detect motion every 1 second
+  //delay(1000);
+}
+
+
+void interrupt_function()
+{
+  // if motion is detected, change LED state
+  LED_state = !LED_state;
+  digitalWrite(LED, LED_state);
+  
+  // print LED state to Serial Monitor
+  if (LED_state == HIGH)
+  {
+    Serial.println("Light ON.");
+  }
+  else
+  {
+    Serial.println("Light OFF.");
+  }
+}
