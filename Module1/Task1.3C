@@ -1,0 +1,59 @@
+/*
+	MOTION-ACTIVATED READING LIGHT
+    Written by: Sarah Osse
+    
+  	This sketch is of a motion-activated reading light.
+    Imagine two motion sensor pads, one on each side of a couple's bed.
+    Either person can wave their hand in front of the pad to turn the light above the bed on.
+    And either person can wave their hand again to turn it off.
+    
+  	This sketch does the following:
+  
+  		- When either PIR motion sensor pin (2 or 3) goes from LOW to HIGH an interrupt is triggered
+  		- The LED changes state (if it was off, it is now on, and vice versa)
+  		- The LED will stay in that state until motion is sensed again (another interrupt)
+
+*/
+
+const int LED = 9;
+const int PIR_left = 2;
+const int PIR_right = 3;
+
+volatile byte LED_state = LOW;
+
+void setup()
+{
+	Serial.begin(9600);
+  
+  	pinMode(LED, OUTPUT);
+	pinMode(PIR_left, INPUT_PULLUP);
+  	pinMode(PIR_right, INPUT_PULLUP);
+  
+  	// Both motion sensors are set as interrupts
+    // PIR_left has higher priority being pin D2
+  	attachInterrupt(digitalPinToInterrupt(PIR_left), left_function, RISING);
+    attachInterrupt(digitalPinToInterrupt(PIR_right), right_function, RISING);
+}
+
+
+void loop()
+{
+  // detect motion every 1 second
+  //delay(1000);
+}
+
+// Interrupt Service Routine (ISR)
+void left_function()
+{
+  // if motion is detected, change LED state
+  LED_state = !LED_state;
+  digitalWrite(LED, LED_state);
+}
+
+// Interrupt Service Routine (ISR)
+void right_function()
+{
+  // if motion is detected, change LED state
+  LED_state = !LED_state;
+  digitalWrite(LED, LED_state);
+}
