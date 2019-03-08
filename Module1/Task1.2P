@@ -9,51 +9,54 @@
     
   	It does the following:
   
-  		- When PIR motion sensor pin goes from HIGH to LOW an interrupt is triggered
-  		- The LED changes state (if it was off, it is now on, and vice versa)
-  		- The LED will stay in that state until motion is sensed again (another interrupt)
+  		- When PIR motion sensor pin goes from LOW to HIGH an interrupt is triggered
+  		- The Light changes state (if it was off, it is now on, and vice versa)
+  		- The Light will stay in that state until motion is sensed again (another interrupt)
   
-  	The LED state is printed to the Serial Monitor.
+  	The Light state is printed to the Serial Monitor.
 
 */
 
-const int LED = 9;
+const int LIGHT = 9;
 const int PIR = 2;
 
-int LED_state = LOW;
+volatile bool state_change = false;
+volatile byte LIGHT_state = LOW;
 
 void setup()
 {
 	Serial.begin(9600);
   
-  	pinMode(LED, OUTPUT);
+  	pinMode(LIGHT, OUTPUT);
 	pinMode(PIR, INPUT_PULLUP);
   
   	// Motion sensor pin (PIR) is set as interrupt and calls the function
-  	attachInterrupt(digitalPinToInterrupt(PIR), interrupt_function, FALLING);
+  	attachInterrupt(digitalPinToInterrupt(PIR), interrupt_function, RISING);
 }
 
 
 void loop()
 {
-  // detect motion every 1 second
-  //delay(1000);
+  if (state_change == true)
+  {
+    // print light state to Serial Monitor
+  	if (LIGHT_state == HIGH)
+  	{
+    	Serial.println("Light ON.");
+  	}
+  	else
+  	{
+    	Serial.println("Light OFF.");
+  	}
+    state_change = false;
+  }
 }
 
 
 void interrupt_function()
 {
   // if motion is detected, change LED state
-  LED_state = !LED_state;
-  digitalWrite(LED, LED_state);
-  
-  // print LED state to Serial Monitor
-  if (LED_state == HIGH)
-  {
-    Serial.println("Light ON.");
-  }
-  else
-  {
-    Serial.println("Light OFF.");
-  }
+  LIGHT_state = !LIGHT_state;
+  digitalWrite(LIGHT, LIGHT_state);
+  state_change = true;
 }
