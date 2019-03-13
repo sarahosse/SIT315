@@ -1,0 +1,108 @@
+/*
+	MOTION-ACTIVATED LIGHT
+    Written by: Sarah Osse
+    
+  	This sketch is of a sensor light with three different sensors detecting motion.
+	It also has a blinking LED to show that the system is working.
+    
+  	This sketch does the following:
+  
+  		- When any of the three PIR motion sensor pins (2, 8, A1) change, an interrupt is triggered
+  		- The light bulb is turned on, and will stay on until the movement ceases.
+  		- The LED slowly flashes at a constant rate (by timer interrupts).
+*/
+
+
+#define LED 13
+
+volatile bool state_change = false;
+volatile byte LIGHT_state = LOW;
+
+void setup()
+{
+  Serial.begin(9600);
+  
+  digitalWrite(2, HIGH); // enable pullup
+  digitalWrite(8, HIGH);
+  
+  pinMode(9, OUTPUT); // lightbulb
+  pinMode(LED, OUTPUT); // in-built LED
+  
+  
+  // Set up Timer 1
+  noInterrupts(); // disables all interrupts
+ 
+  TCCR1A = 0; // normal operation
+  TCNT1 = 0;
+  
+  // sets the LED flashing rate (slowest of 1Hz chosen)
+  OCR1A =  62500; // Compare register value (16MHz/256Hz/desired Hz)
+  
+  TCCR1B = bit(WGM12) | bit(CS12); // CTC mode and 256 prescaler
+  TIMSK1 = bit(OCIE1A); // enable Timer Compare interrupt
+  
+  interrupts(); // enable all interrupts
+  
+  SetupInterruptPin(2); // enable interrupt for pin 2
+  SetupInterruptPin(8); // enable interrupt for pin 8
+  SetupInterruptPin(A1); // enable interrupt for pin A1
+}
+
+
+// Translates "pin" number to it's appropriate codes for each action
+void SetupInterruptPin(byte pin)
+{
+  *digitalPinToPCMSK(pin) |= bit (digitalPinToPCMSKbit(pin));  // enable pin
+  PCIFR  |= bit (digitalPinToPCICRbit(pin)); // clear any outstanding interrupt
+  PCICR  |= bit (digitalPinToPCICRbit(pin)); // enable interrupt for the group
+}
+
+
+// Timer Compare ISR to toggle in-built LED
+ISR(TIMER1_COMPA_vect)
+{ 
+  digitalWrite (LED, digitalRead(LED)^1); // toggles LED
+}
+
+
+// Pin Change ISR for PIR sensor on pin 8
+ISR (PCINT0_vect) // handles interrupt for D8 to D13
+{
+  digitalWrite(9,digitalRead(8));
+  LIGHT_state = !LIGHT_state;
+  state_change = true;
+}
+
+// Pin Change ISR for PIR sensor on pin 2
+ISR (PCINT2_vect) // handles interrupt for D0 to D7
+{
+  digitalWrite(9, digitalRead(2));
+  LIGHT_state = !LIGHT_state;
+  state_change = true;
+}
+
+// Pin Change ISR for PIR sensor on pin A1
+ISR (PCINT1_vect) // handles interrupt for A0 to A5
+{
+  digitalWrite(9,digitalRead(A1));
+  LIGHT_state = !LIGHT_state;
+  state_change = true;
+}
+
+
+void loop()
+{
+  if (state_change == true)
+  {
+    // print light state to Serial Monitor
+  	if (LIGHT_state == HIGH)
+  	{
+    	Serial.println("Light ON.");
+  	}
+  	else
+  	{
+    	Serial.println("Light OFF.");
+  	}
+    state_change = false;
+  }
+}
